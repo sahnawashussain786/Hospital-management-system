@@ -1,0 +1,18 @@
+{
+  "name": "medibook-hms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MediBook — Hospital Management System (MERN + Tailwind CSS)",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently -n api,web -c blue,green \"npm run server\" \"npm run client\"",
+    "seed": "npm run seed --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
