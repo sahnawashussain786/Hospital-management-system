@@ -2,6 +2,10 @@
   "name": "medibook-hms",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "description": "MediBook — Hospital Management System (MERN + Tailwind CSS)",
   "scripts": {
     "install:all": "npm --prefix server install && npm --prefix client install",
