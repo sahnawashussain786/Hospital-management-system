@@ -59,6 +59,42 @@ const isBadAuth = (err) =>
  *   Bad credentials abort immediately (they need a human to fix).
  * - Returns true when connected; false only when unrecoverable (bad auth / gave up).
  */
+/**
+ * Serverless-friendly connection (Vercel, AWS Lambda, etc.).
+ * - Reuses the cached connect promise across warm invocations
+ * - One attempt per cold start (no infinite retry loop — a function
+ *   must return quickly and let the platform handle scaling)
+ * - Returns true when connected; false on failure so the caller can 503
+ */
+const globalForDb = globalThis;
+if (!globalForDb.__medibookMongooseConnect) {
+  globalForDb.__medibookMongooseConnect = null;
+}
+
+export async function connectServerlessDB() {
+  // Already connected or mid-handshake on this warm instance
+  const state = mongoose.connection?.readyState;
+  if (state === 1 || state === 2) return true;
+
+  if (!globalForDb.__medibookMongooseConnect) {
+    const uri = resolveUri();
+    mongoose.set('strictQuery', true);
+    globalForDb.__medibookMongooseConnect = mongoose
+      .connect(uri, { serverSelectionTimeoutMS: 8000 })
+      .then(() => true)
+      .catch((err) => {
+        printConnectionHelp(err, uri);
+        return false;
+      })
+      // Clear the cache only after settling so concurrent invocations share it
+      .finally(() => {
+        globalForDb.__medibookMongooseConnect = null;
+      });
+  }
+
+  return globalForDb.__medibookMongooseConnect;
+}
+
 export async function connectDB({ attempts = Infinity } = {}) {
   const uri = resolveUri();
   mongoose.set('strictQuery', true);
